@@ -47,7 +47,22 @@ you need them — without asking for a single broad storage permission.
 - [Building](#building)
   - [Debug builds](#debug-builds)
   - [Release builds and signing](#release-builds-and-signing)
-- [Deploying](#deploying)
+- [Running on a connected device](#running-on-a-connected-device)
+  - [Prepare the phone](#1-prepare-the-phone)
+  - [Make `adb` available](#2-make-adb-available)
+  - [Connect over USB](#3-connect-over-usb)
+  - [Connect wirelessly](#4-connect-wirelessly-android-11)
+- [Deploying to a device](#deploying-to-a-device)
+  - [Debug mode](#debug-mode-day-to-day-development)
+  - [Profile mode](#profile-mode-measuring-performance)
+  - [Release mode](#release-mode-what-users-would-get)
+  - [Installing a prebuilt APK by hand](#installing-a-prebuilt-apk-by-hand)
+  - [Split APKs](#split-apks-and-which-one-to-install)
+  - [Switching between debug and release](#switching-between-debug-and-release-on-the-same-phone)
+  - [Viewing logs](#viewing-logs-from-the-device)
+  - [Uninstalling](#uninstalling)
+  - [Deploying from Android Studio](#deploying-from-android-studio)
+- [Distributing beyond your own device](#distributing-beyond-your-own-device)
 - [Testing](#testing)
 - [Code quality](#code-quality)
 - [Adding a new emulator](#adding-a-new-emulator)
@@ -919,13 +934,324 @@ version: 0.2.0+2      # <versionName>+<versionCode>
 
 ---
 
-## Deploying
+## Running on a connected device
 
-**Sideloading / direct install:**
+Checkpoint is an app about reaching real folders on real storage, so a physical
+device is the only place its Storage Access Framework behaviour can actually be
+verified. An emulator works for UI work, but its storage providers do not
+reproduce every OEM quirk.
+
+### 1. Prepare the phone
+
+On the device:
+
+1. **Settings → About phone** → tap **Build number** seven times until it says
+   *You are now a developer*. (On Samsung this lives under
+   *Settings → About phone → Software information*; on Xiaomi/HyperOS it is
+   *MIUI version*.)
+2. **Settings → System → Developer options** → enable **USB debugging**.
+3. Optional but useful: enable **Stay awake** so the screen does not lock while
+   you work, and **Disable permission monitoring** if your OEM aggressively
+   revokes URI grants.
+
+### 2. Make `adb` available
+
+`adb` ships with the Android SDK Platform-Tools but is **not on your `PATH` by
+default**. The Flutter tool finds it on its own, so `flutter run` works without
+this — but the manual install and log commands below need it.
+
+```bash
+# macOS / Linux — add to ~/.zshrc or ~/.bashrc
+export ANDROID_HOME="$HOME/Library/Android/sdk"        # macOS
+# export ANDROID_HOME="$HOME/Android/Sdk"              # Linux
+export PATH="$PATH:$ANDROID_HOME/platform-tools"
+```
+
+```powershell
+# Windows PowerShell — add to $PROFILE
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+$env:PATH += ";$env:ANDROID_HOME\platform-tools"
+```
+
+Verify with `adb version`.
+
+### 3. Connect over USB
+
+Plug the phone in with a **data-capable** USB cable — charge-only cables are a
+very common cause of "no devices found". If the phone asks for a USB mode,
+choose **File transfer / MTP** rather than *Charging only*.
+
+The phone will show an **Allow USB debugging?** dialog with your laptop's RSA
+fingerprint. Accept it, and tick *Always allow from this computer*. Until you
+do, the device appears as `unauthorized`.
+
+```bash
+adb devices -l
+# List of devices attached
+# 1A2B3C4D5E    device product:... model:Pixel_7 device:panther
+```
+
+```bash
+flutter devices
+```
+
+If the phone shows as `unauthorized`, revoke and retry:
+*Developer options → Revoke USB debugging authorisations*, unplug, replug,
+accept the dialog.
+
+**Linux only.** USB access needs a udev rule or you will see `no permissions`:
+
+```bash
+# Find the vendor id
+lsusb
+# Add a rule (0x18d1 is Google; use your OEM's id)
+echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"' \
+  | sudo tee /etc/udev/rules.d/51-android.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+**Windows only.** Some OEMs need a vendor USB driver; Google devices work with
+the Google USB Driver from the SDK Manager.
+
+### 4. Connect wirelessly (Android 11+)
+
+Handy because Checkpoint's folder picker involves a lot of on-device tapping.
+
+```bash
+# On the phone: Developer options → Wireless debugging → Pair device with pairing code
+adb pair 192.168.1.42:37031        # IP:port and code from that screen
+adb connect 192.168.1.42:5555      # IP:port from the Wireless debugging main screen
+adb devices                        # should now list the device
+```
+
+Both machines must be on the same network. Re-pairing is occasionally needed
+after a reboot. `flutter run` will find wireless devices too, though discovery
+can be slower — use `--device-timeout=30` if it times out.
+
+---
+
+## Deploying to a device
+
+### Debug mode: day-to-day development
+
+The normal loop. Builds, installs, launches, and attaches with hot reload:
+
+```bash
+flutter run
+```
+
+With more than one device attached, name one:
+
+```bash
+flutter devices                    # copy the id from the first column
+flutter run -d 1A2B3C4D5E
+```
+
+While it is running:
+
+| Key | Action |
+| --- | --- |
+| `r` | Hot reload — reapply changed Dart code, keep app state |
+| `R` | Hot restart — rebuild the widget tree from scratch, lose state |
+| `h` | List all interactive commands |
+| `q` | Quit and detach (the app stays installed) |
+
+Hot reload is ideal for the UI, but note that **Riverpod provider state is
+rebuilt on hot restart, not hot reload** — if you change a provider's
+definition, press `R`.
+
+If you closed the terminal but the app is still running, reattach without
+reinstalling:
+
+```bash
+flutter attach
+```
+
+### Profile mode: measuring performance
+
+Release-like compilation with tracing still available. Use this rather than
+debug for judging whether a large save folder scans quickly:
+
+```bash
+flutter run --profile
+```
+
+### Release mode: what users would get
+
+```bash
+flutter run --release
+```
+
+This compiles ahead-of-time, so there is no hot reload and no debug overlay.
+It is the mode to use when checking real-world backup and restore speed.
+
+> With the signing configuration as shipped, release builds are signed with the
+> **debug key**, so this works with no extra setup. Once you configure a real
+> release keystore (see
+> [Release builds and signing](#release-builds-and-signing)), see
+> [Switching between debug and release](#switching-between-debug-and-release-on-the-same-phone)
+> below.
+
+### Installing a prebuilt APK by hand
+
+Useful when you want to build once and install on several phones, or hand the
+file to someone else.
+
+**Build:**
+
+```bash
+flutter build apk --debug      # → build/app/outputs/flutter-apk/app-debug.apk
+flutter build apk --release    # → build/app/outputs/flutter-apk/app-release.apk
+```
+
+**Install with `adb`:**
 
 ```bash
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
+
+`-r` reinstalls over an existing copy and **keeps app data** — which for
+Checkpoint means keeping your folder grants and configuration. Drop `-r` for a
+clean first install.
+
+With several devices attached, target one with `-s`:
+
+```bash
+adb -s 1A2B3C4D5E install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+**Install with the Flutter tool instead** — it locates the device for you:
+
+```bash
+flutter install                                   # release mode is the default
+flutter install --debug
+flutter install --use-application-binary=build/app/outputs/flutter-apk/app-release.apk
+```
+
+**Verify and launch from the command line:**
+
+```bash
+adb shell pm list packages | grep checkpoint      # dev.checkpoint.checkpoint
+adb shell am start -n dev.checkpoint.checkpoint/.MainActivity
+```
+
+### Split APKs and which one to install
+
+A single "fat" APK carries native code for every architecture and is large
+(the debug APK is roughly 150 MB). Per-ABI builds are much smaller:
+
+```bash
+flutter build apk --split-per-abi
+```
+
+This produces, in `build/app/outputs/flutter-apk/`:
+
+```text
+app-armeabi-v7a-release.apk    32-bit ARM — older devices
+app-arm64-v8a-release.apk      64-bit ARM — essentially every modern phone
+app-x86_64-release.apk         x86_64 — emulators, ChromeOS, a few tablets
+```
+
+Find out which one your device needs:
+
+```bash
+adb shell getprop ro.product.cpu.abi        # e.g. arm64-v8a
+```
+
+Then install the matching file:
+
+```bash
+adb install -r build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+```
+
+Installing the wrong ABI fails with `INSTALL_FAILED_NO_MATCHING_ABIS`.
+
+### Switching between debug and release on the same phone
+
+Debug and release builds share the application id `dev.checkpoint.checkpoint`,
+so only one can be installed at a time.
+
+**As shipped this is not a problem**, because the release build is signed with
+the same debug key. Once you configure a real release keystore, the two
+signatures differ and Android refuses to replace one with the other:
+
+```text
+INSTALL_FAILED_UPDATE_INCOMPATIBLE
+```
+
+Uninstall first — note that this **deletes the app's data**, so your folder
+grants and configuration are lost and must be re-picked:
+
+```bash
+adb uninstall dev.checkpoint.checkpoint
+adb install build/app/outputs/flutter-apk/app-release.apk
+```
+
+If you want both side by side, give the debug build a distinct id by adding to
+`android/app/build.gradle.kts`:
+
+```kotlin
+buildTypes {
+    debug {
+        applicationIdSuffix = ".debug"
+        versionNameSuffix = "-debug"
+    }
+}
+```
+
+They then install as separate apps with separate grants — which is also a
+convenient way to test a migration against a real configuration.
+
+### Viewing logs from the device
+
+```bash
+flutter logs                        # Flutter's own view, device already selected
+adb logcat                          # everything
+adb logcat --pid=$(adb shell pidof -s dev.checkpoint.checkpoint)   # this app only
+adb logcat *:E                      # errors only
+adb logcat -c                       # clear the buffer before reproducing a bug
+```
+
+Dart `print`/`debugPrint` output appears under the `flutter` tag. Uncaught
+platform-channel exceptions from `MainActivity.kt` appear as ordinary Android
+exceptions, so `adb logcat *:E` is the place to look when a folder operation
+fails on-device but passes in tests.
+
+### Uninstalling
+
+```bash
+adb uninstall dev.checkpoint.checkpoint
+```
+
+Because Checkpoint stores its configuration in app-private storage, uninstalling
+discards your folder grants. **Your backups are not affected** — they live in
+the folder you chose, which is outside the app's storage, and survive
+uninstalling by design.
+
+### Deploying from Android Studio
+
+1. Connect the device and unlock it.
+2. Pick it in the device dropdown in the toolbar.
+3. Choose the build mode: *Run → Edit Configurations… → main.dart → Build mode*
+   (`debug`, `profile` or `release`).
+4. Press **Run** (▶) to install and launch, or **Debug** (🐞) for breakpoints in
+   Dart.
+
+To debug the **Kotlin** side, use *Run → Attach debugger to Android process*
+after the app is running, and pick `dev.checkpoint.checkpoint`. Dart and Kotlin
+need separate debugger sessions.
+
+For a signed artefact from the IDE: *Build → Flutter → Build APK* or
+*Build App Bundle*.
+
+---
+
+## Distributing beyond your own device
+
+**Direct download / sideloading.** Hand over the release APK. Recipients must
+enable *Install unknown apps* for whichever app opens the file. Prefer
+`--split-per-abi` builds so the download is ~30 MB rather than ~150 MB, or ship
+the universal APK if you would rather not explain ABIs.
 
 **Google Play.** Upload the `.aab` from
 `build/app/outputs/bundle/release/`. Two things make the store listing unusually
@@ -1119,6 +1445,51 @@ pinned down.
 
 ## Troubleshooting
 
+### Device and installation
+
+**`adb: command not found`.**
+Platform-Tools is not on your `PATH`. See
+[Make `adb` available](#2-make-adb-available). `flutter run` does not need this;
+only the manual `adb` commands do.
+
+**`flutter devices` / `adb devices` shows nothing.**
+In order of likelihood: the cable is charge-only rather than data-capable; USB
+debugging is off; the *Allow USB debugging* prompt has not been accepted; the
+phone's USB mode is *Charging only* instead of *File transfer*. On Linux, add the
+udev rule shown in [Connect over USB](#3-connect-over-usb).
+
+**The device shows as `unauthorized`.**
+The RSA prompt was dismissed or the key changed. On the phone:
+*Developer options → Revoke USB debugging authorisations*, then unplug, replug,
+and accept the dialog — ticking *Always allow from this computer*.
+
+**The device shows as `offline`.**
+Restart the bridge: `adb kill-server && adb start-server`. If it persists,
+unplug, unlock the phone, and replug.
+
+**`INSTALL_FAILED_UPDATE_INCOMPATIBLE`.**
+A build with a different signature is already installed — typically a debug
+build when you are installing a real-keystore release, or vice versa.
+`adb uninstall dev.checkpoint.checkpoint` first, accepting that this deletes
+your folder grants (backups are unaffected). See
+[Switching between debug and release](#switching-between-debug-and-release-on-the-same-phone).
+
+**`INSTALL_FAILED_NO_MATCHING_ABIS`.**
+You installed a per-ABI APK built for a different architecture. Check with
+`adb shell getprop ro.product.cpu.abi` and install the matching file, or use the
+universal APK.
+
+**`INSTALL_FAILED_INSUFFICIENT_STORAGE`.**
+Debug APKs are ~150 MB. Free space on the device, or install a
+`--split-per-abi` release build instead.
+
+**Hot reload does not pick up a change.**
+Changes to provider definitions, `main()`, or anything `const` need a hot
+restart (`R`) rather than a hot reload (`r`). Changes to Kotlin always need a
+full rebuild — stop and re-run `flutter run`.
+
+### Build and IDE
+
 **`flutter doctor` reports missing Android licences.**
 Run `flutter doctor --android-licenses` and accept them.
 
@@ -1137,6 +1508,8 @@ The Gradle sync has not completed. *File → Sync Project with Gradle Files*.
 **Android Studio shows no Dart tooling / no run button.**
 You opened `android/` instead of the repository root. Close the project and
 reopen the folder containing `pubspec.yaml`.
+
+### App behaviour
 
 **The app shows "No games found yet" even though saves exist.**
 Check *Settings*: the save folder must be granted, and it must be the folder
