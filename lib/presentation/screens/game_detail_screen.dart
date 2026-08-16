@@ -45,12 +45,10 @@ class GameDetailScreen extends ConsumerWidget {
                 ),
                 for (final saveSet in game.saveSets)
                   ListTile(
-                    leading: Icon(
-                      switch (saveSet.kind) {
-                        SaveKind.saveData => Icons.save_outlined,
-                        SaveKind.saveState => Icons.camera_outlined,
-                      },
-                    ),
+                    leading: Icon(switch (saveSet.kind) {
+                      SaveKind.saveData => Icons.save_outlined,
+                      SaveKind.saveState => Icons.camera_outlined,
+                    }),
                     title: Text(saveSet.kind.label),
                     // Naming the kind matters: the user is about to overwrite
                     // one of these, and they are not interchangeable.
@@ -90,8 +88,7 @@ class GameDetailScreen extends ConsumerWidget {
                     vertical: 8,
                   ),
                   child: FilledButton.icon(
-                    onPressed:
-                        backupRoot == null || transfer is TransferRunning
+                    onPressed: backupRoot == null || transfer is TransferRunning
                         ? null
                         : () => ref
                               .read(transferControllerProvider.notifier)
@@ -150,7 +147,8 @@ class GameDetailScreen extends ConsumerWidget {
                                 trailing: TextButton(
                                   onPressed: transfer is TransferRunning
                                       ? null
-                                      : () => startRestore(context, ref, summary),
+                                      : () =>
+                                            startRestore(context, ref, summary),
                                   child: const Text('Restore'),
                                 ),
                               ),

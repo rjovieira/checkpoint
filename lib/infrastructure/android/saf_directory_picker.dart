@@ -25,7 +25,9 @@ final class SafDirectoryPicker implements DirectoryPickerPort {
 
     final rootId = result['rootId'];
     if (rootId is! String) {
-      throw const StorageException('The folder picker returned nothing usable.');
+      throw const StorageException(
+        'The folder picker returned nothing usable.',
+      );
     }
     return StorageRoot(
       id: rootId,

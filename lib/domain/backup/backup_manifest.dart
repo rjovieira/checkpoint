@@ -140,8 +140,7 @@ final class BackupManifest {
     return null;
   }
 
-  bool get containsSaveData =>
-      sources.any((s) => s.kind == SaveKind.saveData);
+  bool get containsSaveData => sources.any((s) => s.kind == SaveKind.saveData);
 
   bool get containsSaveStates =>
       sources.any((s) => s.kind == SaveKind.saveState);
@@ -157,7 +156,8 @@ final class BackupManifest {
     'files': files.map((f) => f.toJson()).toList(),
   };
 
-  List<int> encode() => utf8.encode(const JsonEncoder.withIndent('  ').convert(toJson()));
+  List<int> encode() =>
+      utf8.encode(const JsonEncoder.withIndent('  ').convert(toJson()));
 
   /// Parses a manifest from archive bytes.
   ///
@@ -196,7 +196,7 @@ final class BackupManifest {
     if (formatVersion > currentFormatVersion) {
       return reject(
         'This backup was made by a newer version of Checkpoint. '
-        'Update Checkpoint to restore it.',
+            'Update Checkpoint to restore it.',
         'formatVersion $formatVersion > $currentFormatVersion',
       );
     }
@@ -243,7 +243,8 @@ final class BackupManifest {
       // safe on their own — a source id of "../.." would otherwise smuggle a
       // traversal in through the back door.
       final segment = SafePath.parse(id);
-      if (segment is Err<SafePath> || segment.valueOrNull!.segments.length != 1) {
+      if (segment is Err<SafePath> ||
+          segment.valueOrNull!.segments.length != 1) {
         return reject('This backup has an unsafe source identifier.', id);
       }
       sources.add(
@@ -285,7 +286,10 @@ final class BackupManifest {
       final path = SafePath.parse(rawPath);
       switch (path) {
         case Err<SafePath>(:final failure):
-          return reject('This backup contains an unsafe file path.', failure.detail);
+          return reject(
+            'This backup contains an unsafe file path.',
+            failure.detail,
+          );
         case Ok<SafePath>(:final value):
           files.add(
             BackupFileEntry(

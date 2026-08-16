@@ -49,9 +49,7 @@ final class CreateBackup {
   }) async {
     if (game.saveSets.isEmpty || game.fileCount == 0) {
       return const Err(
-        ValidationFailure(
-          message: 'This game has no save files to back up.',
-        ),
+        ValidationFailure(message: 'This game has no save files to back up.'),
       );
     }
 
@@ -81,7 +79,8 @@ final class CreateBackup {
             label: saveSet.sourceLabel,
             kind: saveSet.kind,
             layoutId: saveSet.layoutId,
-            originDisplayPath: saveSet.root.displayPath ?? saveSet.root.displayName,
+            originDisplayPath:
+                saveSet.root.displayPath ?? saveSet.root.displayName,
           ),
         );
 

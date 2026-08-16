@@ -21,7 +21,9 @@ void main() {
   group('round trip', () {
     test('packs and unpacks a backup unchanged', () {
       final payload = Uint8List.fromList(utf8.encode('save game bytes'));
-      final manifest = _manifest([_entry('savedata', 'GAME/DATA.BIN', payload)]);
+      final manifest = _manifest([
+        _entry('savedata', 'GAME/DATA.BIN', payload),
+      ]);
 
       final bytes = archive.pack(
         manifest: manifest,
@@ -77,7 +79,9 @@ void main() {
             },
           ],
         ),
-        entries: {'files/savedata/x': const [1, 2, 3, 4]},
+        entries: {
+          'files/savedata/x': const [1, 2, 3, 4],
+        },
       );
 
       final result = archive.unpack(bytes);
@@ -221,7 +225,10 @@ void main() {
     test('an archive with no manifest at all', () {
       final raw = Archive()..add(ArchiveFile.bytes('random.txt', [1, 2, 3]));
       final result = archive.unpack(ZipEncoder().encodeBytes(raw));
-      expect(result.failureOrNull!.message, contains('not a Checkpoint backup'));
+      expect(
+        result.failureOrNull!.message,
+        contains('not a Checkpoint backup'),
+      );
     });
 
     test('a file that is not a ZIP', () {
@@ -234,9 +241,7 @@ void main() {
 
   group('resource limits', () {
     test('rejects an oversized archive before decoding it', () {
-      const tiny = ZipBackupArchive(
-        limits: ArchiveLimits(maxArchiveBytes: 10),
-      );
+      const tiny = ZipBackupArchive(limits: ArchiveLimits(maxArchiveBytes: 10));
       final result = tiny.unpack(Uint8List(64));
       expect(result.failureOrNull!.message, contains('too large to open'));
     });
@@ -285,9 +290,7 @@ void main() {
       for (var i = 0; i < 20; i++) {
         raw.add(ArchiveFile.bytes('files/savedata/$i.bin', [i]));
       }
-      const bounded = ZipBackupArchive(
-        limits: ArchiveLimits(maxEntries: 5),
-      );
+      const bounded = ZipBackupArchive(limits: ArchiveLimits(maxEntries: 5));
       expect(
         bounded.unpack(ZipEncoder().encodeBytes(raw)).failureOrNull!.message,
         contains('too many files'),

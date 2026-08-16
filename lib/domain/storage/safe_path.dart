@@ -130,7 +130,11 @@ final class SafePath {
   /// have checked, so reaching this is a bug rather than bad input.
   SafePath relativeTo(SafePath prefix) {
     if (!isUnder(prefix)) {
-      throw ArgumentError.value(value, 'this', 'is not under "${prefix.value}"');
+      throw ArgumentError.value(
+        value,
+        'this',
+        'is not under "${prefix.value}"',
+      );
     }
     final rest = segments.sublist(prefix.segments.length);
     return SafePath._(List.unmodifiable(rest), rest.join('/'));

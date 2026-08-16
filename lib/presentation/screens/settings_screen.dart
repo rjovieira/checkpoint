@@ -77,7 +77,9 @@ class _BackupRootTile extends ConsumerWidget {
 
     return ListTile(
       leading: Icon(
-        root == null ? Icons.folder_off_outlined : Icons.folder_special_outlined,
+        root == null
+            ? Icons.folder_off_outlined
+            : Icons.folder_special_outlined,
       ),
       title: Text(root?.displayPath ?? root?.displayName ?? 'Not chosen'),
       subtitle: Text(
@@ -129,7 +131,7 @@ class _EmulatorSection extends ConsumerWidget {
           if (status.isInstalled) 'installed' else 'not detected',
           if (status.isConfigured)
             '${status.grantedRoots.length} folder'
-            '${status.grantedRoots.length == 1 ? '' : 's'} set',
+                '${status.grantedRoots.length == 1 ? '' : 's'} set',
         ].join(' · '),
       ),
       initiallyExpanded: status.isInstalled && !status.isConfigured,
@@ -214,9 +216,8 @@ Future<StorageRoot?> _pick(
         .pickDirectory(initialLocationHint: initialHint);
   } on StorageException catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     }
     return null;
   }

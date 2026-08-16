@@ -38,10 +38,7 @@ final class GameDiscoveryResult {
 /// merge is why a single backup can capture both while still recording which
 /// files came from where.
 final class DiscoverGames {
-  const DiscoverGames({
-    required this.registry,
-    required this.fileSystem,
-  });
+  const DiscoverGames({required this.registry, required this.fileSystem});
 
   final EmulatorRegistry registry;
   final FileSystemPort fileSystem;

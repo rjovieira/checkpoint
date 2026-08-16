@@ -19,7 +19,11 @@ void main() {
   test('every registered emulator is reported, installed or not', () async {
     final statuses = await detectorFor(const [])(AppConfiguration.empty);
 
-    expect(statuses.map((s) => s.definition.id), ['ppsspp', 'retroarch', 'mgba']);
+    expect(statuses.map((s) => s.definition.id), [
+      'ppsspp',
+      'retroarch',
+      'mgba',
+    ]);
     expect(statuses.every((s) => !s.isInstalled), isTrue);
     expect(statuses.every((s) => !s.isConfigured), isTrue);
   });
@@ -47,10 +51,7 @@ void main() {
       ],
     );
 
-    final ppsspp = statusFor(
-      await detectorFor(const [])(configured),
-      'ppsspp',
-    );
+    final ppsspp = statusFor(await detectorFor(const [])(configured), 'ppsspp');
 
     expect(ppsspp.isConfigured, isTrue);
     expect(ppsspp.grantedRoots.keys, ['states']);

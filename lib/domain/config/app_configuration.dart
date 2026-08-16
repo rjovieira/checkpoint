@@ -74,10 +74,7 @@ final class AppConfiguration {
 
   AppConfiguration withSaveRoot(GrantedSaveRoot granted) => AppConfiguration(
     backupRoot: backupRoot,
-    saveRoots: [
-      ...saveRoots.where((r) => r.key != granted.key),
-      granted,
-    ],
+    saveRoots: [...saveRoots.where((r) => r.key != granted.key), granted],
   );
 
   AppConfiguration withoutSaveRoot(String emulatorId, String sourceId) =>

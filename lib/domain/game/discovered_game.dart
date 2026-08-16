@@ -60,8 +60,7 @@ final class DiscoveredGame {
   /// Stable key across sessions, used for selection and caching.
   String get key => '$emulatorId:$gameId';
 
-  int get totalBytes =>
-      saveSets.fold(0, (sum, set) => sum + set.totalBytes);
+  int get totalBytes => saveSets.fold(0, (sum, set) => sum + set.totalBytes);
 
   int get fileCount => saveSets.fold(0, (sum, set) => sum + set.fileCount);
 

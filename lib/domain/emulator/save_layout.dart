@@ -113,8 +113,7 @@ final class DirectoryPerGameLayout implements SaveLayout {
       groups.add(
         SaveGroup(
           gameId: entry.key,
-          title:
-              await _readTitle(fs, root, entry.value, files) ?? entry.key,
+          title: await _readTitle(fs, root, entry.value, files) ?? entry.key,
           files: files,
           totalBytes: totalBytes,
           modifiedAt: newest,
@@ -122,7 +121,9 @@ final class DirectoryPerGameLayout implements SaveLayout {
       );
     }
 
-    groups.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    groups.sort(
+      (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+    );
     return groups;
   }
 
@@ -142,7 +143,9 @@ final class DirectoryPerGameLayout implements SaveLayout {
     if (match == null) {
       return acceptUnmatchedDirectories ? name : null;
     }
-    return match.groupCount >= 1 ? (match.group(1) ?? match.group(0)) : match.group(0);
+    return match.groupCount >= 1
+        ? (match.group(1) ?? match.group(0))
+        : match.group(0);
   }
 
   Future<String?> _readTitle(
@@ -237,7 +240,9 @@ final class FlatFilePerGameLayout implements SaveLayout {
       );
     }).toList();
 
-    groups.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    groups.sort(
+      (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+    );
     return groups;
   }
 

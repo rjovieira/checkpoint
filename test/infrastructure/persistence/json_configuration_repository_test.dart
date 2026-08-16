@@ -71,11 +71,7 @@ void main() {
     const second = StorageRoot(id: 'content://tree/b', displayName: 'B');
 
     var configuration = AppConfiguration.empty.withSaveRoot(
-      const GrantedSaveRoot(
-        emulatorId: 'mgba',
-        sourceId: 'saves',
-        root: first,
-      ),
+      const GrantedSaveRoot(emulatorId: 'mgba', sourceId: 'saves', root: first),
     );
     configuration = configuration.withSaveRoot(
       const GrantedSaveRoot(

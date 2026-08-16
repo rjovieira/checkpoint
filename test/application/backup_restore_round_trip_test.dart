@@ -60,8 +60,7 @@ void main() {
   late RestoreBackup restoreBackup;
   late ListBackups listBackups;
 
-  Uint8List bytesOf(String value) =>
-      Uint8List.fromList(utf8.encode(value));
+  Uint8List bytesOf(String value) => Uint8List.fromList(utf8.encode(value));
 
   setUp(() {
     fs = InMemoryFileSystem();
@@ -156,10 +155,7 @@ void main() {
       fs.fileAt(saveDataRoot, 'ULUS10041DATA00/SAVE.BIN'),
       bytesOf('progress'),
     );
-    expect(
-      fs.fileAt(stateRoot, 'ULUS10041_1.00_0.ppst'),
-      bytesOf('state'),
-    );
+    expect(fs.fileAt(stateRoot, 'ULUS10041_1.00_0.ppst'), bytesOf('state'));
   });
 
   test('restore leaves other games in a shared folder untouched', () async {
@@ -167,9 +163,9 @@ void main() {
     final game = discovered.games.firstWhere((g) => g.gameId == 'ULUS10041');
     await createBackup(game: game, backupRoot: backupRoot);
 
-    final summary = (await listBackups(
-      backupRoot: backupRoot,
-    )).valueOrNull!.single;
+    final summary = (await listBackups(backupRoot: backupRoot))
+        .valueOrNull!
+        .single;
     final plan = (await restoreBackup.inspect(
       backupRoot: backupRoot,
       archivePath: summary.path,
@@ -181,10 +177,7 @@ void main() {
 
     // Only this game's files were written; the neighbour was never touched.
     expect(fs.writeLog, hasLength(4));
-    expect(
-      fs.writeLog.any((entry) => entry.contains('ULES00181')),
-      isFalse,
-    );
+    expect(fs.writeLog.any((entry) => entry.contains('ULES00181')), isFalse);
     expect(
       fs.fileAt(saveDataRoot, 'ULES00181DATA00/SAVE.BIN'),
       bytesOf('other'),
@@ -227,16 +220,19 @@ void main() {
   });
 
   group('failure handling', () {
-    test('discovery reports a revoked folder instead of hiding games', () async {
-      fs.makeInaccessible(stateRoot);
+    test(
+      'discovery reports a revoked folder instead of hiding games',
+      () async {
+        fs.makeInaccessible(stateRoot);
 
-      final result = await discoverGames(configuration);
+        final result = await discoverGames(configuration);
 
-      expect(result.games, isNotEmpty, reason: 'save data still readable');
-      expect(result.issues, hasLength(1));
-      expect(result.issues.single.failure, isA<PermissionFailure>());
-      expect(result.issues.single.sourceLabel, contains('save state'));
-    });
+        expect(result.games, isNotEmpty, reason: 'save data still readable');
+        expect(result.issues, hasLength(1));
+        expect(result.issues.single.failure, isA<PermissionFailure>());
+        expect(result.issues.single.sourceLabel, contains('save state'));
+      },
+    );
 
     test('backing up fails clearly when the backup folder is gone', () async {
       final discovered = await discoverGames(configuration);
@@ -248,44 +244,49 @@ void main() {
       expect(result.failureOrNull, isA<PermissionFailure>());
     });
 
-    test('a restore with no folder for a source is refused, not partial', () async {
-      final discovered = await discoverGames(configuration);
-      final game = discovered.games.firstWhere((g) => g.gameId == 'ULUS10041');
-      await createBackup(game: game, backupRoot: backupRoot);
+    test(
+      'a restore with no folder for a source is refused, not partial',
+      () async {
+        final discovered = await discoverGames(configuration);
+        final game = discovered.games.firstWhere(
+          (g) => g.gameId == 'ULUS10041',
+        );
+        await createBackup(game: game, backupRoot: backupRoot);
 
-      final summary = (await listBackups(
-        backupRoot: backupRoot,
-      )).valueOrNull!.single;
+        final summary = (await listBackups(backupRoot: backupRoot))
+            .valueOrNull!
+            .single;
 
-      // The user removed the save-state folder after taking the backup.
-      const partial = AppConfiguration(
-        backupRoot: backupRoot,
-        saveRoots: [
-          GrantedSaveRoot(
-            emulatorId: 'ppsspp',
-            sourceId: 'savedata',
-            root: saveDataRoot,
-          ),
-        ],
-      );
+        // The user removed the save-state folder after taking the backup.
+        const partial = AppConfiguration(
+          backupRoot: backupRoot,
+          saveRoots: [
+            GrantedSaveRoot(
+              emulatorId: 'ppsspp',
+              sourceId: 'savedata',
+              root: saveDataRoot,
+            ),
+          ],
+        );
 
-      final plan = (await restoreBackup.inspect(
-        backupRoot: backupRoot,
-        archivePath: summary.path,
-        configuration: partial,
-      )).valueOrNull!;
+        final plan = (await restoreBackup.inspect(
+          backupRoot: backupRoot,
+          archivePath: summary.path,
+          configuration: partial,
+        )).valueOrNull!;
 
-      expect(plan.canApply, isFalse);
-      expect(plan.unresolved.single.source.id, 'states');
+        expect(plan.canApply, isFalse);
+        expect(plan.unresolved.single.source.id, 'states');
 
-      fs.writeLog.clear();
-      final result = await restoreBackup.apply(
-        backupRoot: backupRoot,
-        plan: plan,
-      );
-      expect(result, isA<Err<RestoreSummary>>());
-      expect(fs.writeLog, isEmpty, reason: 'nothing may be written');
-    });
+        fs.writeLog.clear();
+        final result = await restoreBackup.apply(
+          backupRoot: backupRoot,
+          plan: plan,
+        );
+        expect(result, isA<Err<RestoreSummary>>());
+        expect(fs.writeLog, isEmpty, reason: 'nothing may be written');
+      },
+    );
 
     test('backing up a game with no files is refused', () async {
       const empty = DiscoveredGame(

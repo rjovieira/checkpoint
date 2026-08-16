@@ -39,9 +39,7 @@ final class TransferFailed extends TransferState {
 }
 
 final transferControllerProvider =
-    NotifierProvider<TransferController, TransferState>(
-      TransferController.new,
-    );
+    NotifierProvider<TransferController, TransferState>(TransferController.new);
 
 /// Drives backup and restore, and reports progress.
 ///

@@ -98,9 +98,9 @@ class _IssueTile extends StatelessWidget {
         leading: const Icon(Icons.warning_amber_outlined),
         title: Text('${issue.emulatorName} · ${issue.sourceLabel}'),
         subtitle: Text(issue.failure.message),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-        ),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen())),
       ),
     );
   }

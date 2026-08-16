@@ -56,7 +56,8 @@ final class InMemoryFileSystem implements FileSystemPort {
 
   Uint8List? fileAt(StorageRoot root, String path) => _files[root.id]?[path];
 
-  Iterable<String> pathsIn(StorageRoot root) => _files[root.id]?.keys ?? const [];
+  Iterable<String> pathsIn(StorageRoot root) =>
+      _files[root.id]?.keys ?? const [];
 
   void _guard(StorageRoot root) {
     if (_inaccessibleRoots.contains(root.id)) {
@@ -113,7 +114,8 @@ final class InMemoryFileSystem implements FileSystemPort {
     _guard(root);
     final prefix = directory == null ? '' : '${directory.value}/';
     final result = <StorageEntry>[];
-    for (final entry in (_files[root.id] ?? const <String, Uint8List>{}).entries) {
+    for (final entry
+        in (_files[root.id] ?? const <String, Uint8List>{}).entries) {
       if (!entry.key.startsWith(prefix)) continue;
       result.add(
         StorageEntry(

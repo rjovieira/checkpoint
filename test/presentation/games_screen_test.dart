@@ -197,10 +197,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('RetroArch · RetroArch states folder'),
-      findsOneWidget,
-    );
+    expect(find.text('RetroArch · RetroArch states folder'), findsOneWidget);
     expect(
       find.text('No games could be read from the folders above.'),
       findsOneWidget,

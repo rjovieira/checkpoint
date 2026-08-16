@@ -155,8 +155,7 @@ void main() {
 
     test('a source id that is a path rather than a name', () {
       final json = sample().toJson();
-      ((json['sources']! as List).first as Map<String, Object?>)['id'] =
-          'a/b';
+      ((json['sources']! as List).first as Map<String, Object?>)['id'] = 'a/b';
       expect(
         BackupManifest.fromJson(json).failureOrNull!.message,
         contains('unsafe source'),

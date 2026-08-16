@@ -136,10 +136,7 @@ Future<void> _showBlocked(BuildContext context, Failure failure) {
           Text(failure.message),
           if (failure.detail != null) ...[
             const SizedBox(height: 12),
-            Text(
-              failure.detail!,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(failure.detail!, style: Theme.of(context).textTheme.bodySmall),
           ],
         ],
       ),

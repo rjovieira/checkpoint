@@ -34,11 +34,7 @@ final class EmulatorRegistry {
     for (final emulator in emulators) ...emulator.androidPackageIds,
   ];
 
-  static final List<EmulatorDefinition> _builtIn = [
-    _ppsspp,
-    _retroArch,
-    _mgba,
-  ];
+  static final List<EmulatorDefinition> _builtIn = [_ppsspp, _retroArch, _mgba];
 
   // ── PPSSPP ────────────────────────────────────────────────────────────
   //

@@ -25,7 +25,11 @@ void main() {
     for (final input in valid) {
       test('"$input"', () {
         final result = SafePath.parse(input);
-        expect(result, isA<Ok<SafePath>>(), reason: '$input should be accepted');
+        expect(
+          result,
+          isA<Ok<SafePath>>(),
+          reason: '$input should be accepted',
+        );
         expect(result.valueOrNull!.value, input);
       });
     }

@@ -144,7 +144,8 @@ final class ZipBackupArchive implements BackupArchivePort {
       if (entry.size > limits.maxFileBytes) {
         return Err(
           ArchiveFailure(
-            message: 'This backup contains a file that is too large to restore.',
+            message:
+                'This backup contains a file that is too large to restore.',
             detail: '$entryName declares ${entry.size} bytes',
           ),
         );
@@ -253,14 +254,15 @@ final class ZipBackupArchive implements BackupArchivePort {
     if (manifestEntry == null) {
       return const Err(
         ArchiveFailure(
-          message:
-              'This file is not a Checkpoint backup — it has no manifest.',
+          message: 'This file is not a Checkpoint backup — it has no manifest.',
         ),
       );
     }
     if (manifestEntry.size > _maxManifestBytes) {
       return const Err(
-        ArchiveFailure(message: 'This backup\'s metadata is implausibly large.'),
+        ArchiveFailure(
+          message: 'This backup\'s metadata is implausibly large.',
+        ),
       );
     }
     final bytes = manifestEntry.readBytes();

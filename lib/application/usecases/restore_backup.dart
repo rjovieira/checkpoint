@@ -24,7 +24,10 @@ final class RestoreTarget {
 
 /// A source in the backup that has nowhere to go.
 final class UnresolvedRestoreTarget {
-  const UnresolvedRestoreTarget({required this.source, required this.fileCount});
+  const UnresolvedRestoreTarget({
+    required this.source,
+    required this.fileCount,
+  });
 
   final BackupSource source;
   final int fileCount;
@@ -77,10 +80,7 @@ final class RestoreSummary {
 /// saves for other games that share a flat folder, which is exactly how
 /// RetroArch and mGBA store things.
 final class RestoreBackup {
-  const RestoreBackup({
-    required this.fileSystem,
-    required this.archive,
-  });
+  const RestoreBackup({required this.fileSystem, required this.archive});
 
   final FileSystemPort fileSystem;
   final BackupArchivePort archive;

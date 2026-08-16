@@ -41,10 +41,7 @@ final class EmulatorStatus {
 /// therefore lets the user configure any emulator in the registry and simply
 /// highlights the ones that were detected.
 final class DetectEmulators {
-  const DetectEmulators({
-    required this.registry,
-    required this.installedApps,
-  });
+  const DetectEmulators({required this.registry, required this.installedApps});
 
   final EmulatorRegistry registry;
   final InstalledAppPort installedApps;
