@@ -1,0 +1,65 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Checkpoint requests NO storage permissions.
+
+      All file access goes through the Storage Access Framework: the user picks
+      each folder, and the resulting grant is persisted. That covers reading
+      emulator saves and writing backups, so MANAGE_EXTERNAL_STORAGE (All Files
+      Access) and the legacy READ/WRITE_EXTERNAL_STORAGE permissions are not
+      needed and are deliberately absent.
+    -->
+
+    <!--
+      Scoped package visibility. Checkpoint only ever asks "is this specific
+      emulator installed?", never "what has the user installed?", so it declares
+      the exact packages here instead of requesting QUERY_ALL_PACKAGES.
+
+      Adding an emulator to the registry means adding its package ids here too;
+      without an entry the app still works, it just cannot auto-detect it.
+    -->
+    <queries>
+        <!-- PPSSPP -->
+        <package android:name="org.ppsspp.ppsspp" />
+        <package android:name="org.ppsspp.ppssppgold" />
+        <!-- RetroArch -->
+        <package android:name="com.retroarch" />
+        <package android:name="com.retroarch.aarch64" />
+        <package android:name="com.retroarch.ra32" />
+        <!-- mGBA -->
+        <package android:name="io.mgba" />
+
+        <!-- Required by the Flutter engine's text processing plugin. -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
+
+    <application
+        android:label="Checkpoint"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+</manifest>
